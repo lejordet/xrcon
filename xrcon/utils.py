@@ -74,8 +74,8 @@ def rcon_secure_time_packet(password, command, time_diff=0):
 
 
 def parse_challenge_response(response):
-    l = len(CHALLENGE_RESPONSE_HEADER)
-    return response[l:l+11]
+    length = len(CHALLENGE_RESPONSE_HEADER)
+    return response[length:length+11]
 
 
 def rcon_secure_challenge_packet(password, challenge, command):
@@ -96,8 +96,8 @@ def rcon_secure_challenge_packet(password, challenge, command):
 
 
 def parse_rcon_response(packet):
-    l = len(RCON_RESPONSE_HEADER)
-    return packet[l:]
+    length = len(RCON_RESPONSE_HEADER)
+    return packet[length:]
 
 
 def parse_server_addr(str_addr, default_port=26000):
@@ -153,7 +153,7 @@ def parse_server_vars(server_vars):
 class Player(object):
 
     PLAYER_RE = re.compile(
-        six.b('^(?P<frags>-?\d+) (?P<ping>-?\d+) "(?P<name>.*?)"$')
+        six.b(r'^(?P<frags>-?\d+) (?P<ping>-?\d+) "(?P<name>.*?)"$')
     )
     __slots__ = ('frags', 'ping', 'name')
 
