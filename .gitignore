@@ -1,6 +1,8 @@
 .*
+!/.github
 *.py[co]
 *.sw[op]
+.venv/
 venv/
 cover/
 dist/
@@ -10,5 +12,5 @@ build/
 nosetests.xml
 htmlcov
 !.gitignore
-!.travis.yml
-!.appveyor.yml
+!pyproject.toml
+uv.lock

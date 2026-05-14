@@ -1,26 +1,26 @@
 import socket
 import time
 from functools import wraps
-import six
+
 from .utils import (
-    rcon_nosecure_packet,
-    rcon_secure_time_packet,
-    rcon_secure_challenge_packet,
+    CHALLENGE_PACKET,
+    CHALLENGE_RESPONSE_HEADER,
+    MAX_PACKET_SIZE,
+    PING_Q2_PACKET,
+    PING_Q3_PACKET,
+    PONG_Q2_PACKET,
+    PONG_Q3_PACKET,
+    QUAKE_STATUS_PACKET,
+    RCON_RESPONSE_HEADER,
+    STATUS_RESPONSE_HEADER,
+    Player,
     parse_challenge_response,
     parse_rcon_response,
     parse_server_addr,
     parse_status_packet,
-    Player,
-    CHALLENGE_PACKET,
-    CHALLENGE_RESPONSE_HEADER,
-    RCON_RESPONSE_HEADER,
-    PING_Q2_PACKET,
-    PONG_Q2_PACKET,
-    PING_Q3_PACKET,
-    PONG_Q3_PACKET,
-    QUAKE_STATUS_PACKET,
-    STATUS_RESPONSE_HEADER,
-    MAX_PACKET_SIZE
+    rcon_nosecure_packet,
+    rcon_secure_challenge_packet,
+    rcon_secure_time_packet,
 )
 
 
@@ -39,7 +39,7 @@ def connection_required(fun):
     return wrapper
 
 
-class QuakeProtocol(object):
+class QuakeProtocol:
 
     CHALLENGE_TIMEOUT = 3
     player_factory = Player.parse_player
@@ -70,7 +70,7 @@ class QuakeProtocol(object):
         while time.time() < timeout_time:
             yield self.sock.recv(MAX_PACKET_SIZE)
 
-        raise socket.timeout("Read timeout")
+        raise TimeoutError("Read timeout")
 
     @staticmethod
     def best_connection_params(host, port):
@@ -113,7 +113,7 @@ class QuakeProtocol(object):
             for packet in self.read_iterator(timeout):
                 if packet == pong_packet:
                     return time.time() - start
-        except socket.timeout:
+        except TimeoutError:
             return None
 
     @connection_required
@@ -197,11 +197,11 @@ class XRcon(QuakeProtocol):
             for packet in self.read_iterator(timeout):
                 if packet.startswith(RCON_RESPONSE_HEADER):
                     data.append(parse_rcon_response(packet))
-        except socket.timeout:
+        except TimeoutError:
             pass
 
         if data:
-            return six.b('').join(data)
+            return b"".join(data)
 
     @connection_required
     def execute(self, command, timeout=1):

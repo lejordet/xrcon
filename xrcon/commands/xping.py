@@ -1,25 +1,26 @@
 import argparse
-import socket
-import select
 import errno
 import math
+import select
+import socket
 import time
-import six
 from collections import namedtuple
-from .base import BaseProgram
+
 from ..utils import (
-    PING_Q2_PACKET, PONG_Q2_PACKET, PING_QFUSION_PACKET, PONG_QFUSION_PACKET,
-    PING_Q3_PACKET, PONG_Q3_PACKET, MAX_PACKET_SIZE
+    MAX_PACKET_SIZE,
+    PING_Q2_PACKET,
+    PING_Q3_PACKET,
+    PING_QFUSION_PACKET,
+    PONG_Q2_PACKET,
+    PONG_Q3_PACKET,
+    PONG_QFUSION_PACKET,
 )
+from .base import BaseProgram
+
+monotonic_time = time.monotonic
 
 
-if six.PY3:  # pragma: no cover
-    monotonic_time = time.monotonic
-else:   # pragma: no cover
-    monotonic_time = time.time
-
-
-PingProtocol = namedtuple('PingProtocol', ['ping', 'pong'])
+PingProtocol = namedtuple("PingProtocol", ["ping", "pong"])
 
 
 Q2_PROTOCOL = PingProtocol(PING_Q2_PACKET, PONG_Q2_PACKET)
@@ -29,16 +30,16 @@ Q3_PROTOCOL = PingProtocol(PING_Q3_PACKET, PONG_Q3_PACKET)
 
 class XPingProgram(BaseProgram):
 
-    description = 'Ping remote Xonotic server'
+    description = "Ping remote Xonotic server"
     minimal_interval = 0.5
     default_interval = 1.0
     default_port = 26000
     ping_protocols = {
-        'q2': Q2_PROTOCOL,
-        'q3': Q3_PROTOCOL,
-        'qfusion': QFUSION_PROTOCOL
+        "q2": Q2_PROTOCOL,
+        "q3": Q3_PROTOCOL,
+        "qfusion": QFUSION_PROTOCOL
     }
-    default_ping_protocol = 'q2'
+    default_ping_protocol = "q2"
 
     def __init__(self):
         super(XPingProgram, self).__init__()
@@ -76,7 +77,7 @@ class XPingProgram(BaseProgram):
                 socket.IPPROTO_UDP
             )
         except socket.gaierror as exc:
-            error_msg = "Can't find server: {err}\n".format(err=exc.strerror)
+            error_msg = f"Can't find server: {exc.strerror}\n"
             self.parser.exit(255, error_msg)
         else:
             # return first picked server
@@ -93,31 +94,22 @@ class XPingProgram(BaseProgram):
         self.sock.setblocking(False)
 
     def print_header(self, namespace):
-        print("XPING {server} ({ip_addr}) port: {port}".format(
-            server=namespace.server,
-            ip_addr=self.addr[0],
-            port=namespace.port
-        ))
+        print(f"XPING {namespace.server} ({self.addr[0]}) port: {namespace.port}")
 
     def print_footer(self):
         if self.packets_sent <= 0:
             return
 
-        print('\n--- {server} ping statistics ---'.format(
-            server=self.server_name
-        ))
+        print(f"\n--- {self.server_name} ping statistics ---")
 
         loss = self.packets_sent - self.packets_received
         loss_percent = (loss / self.packets_sent) * 100
-        part = "{sent:d} packets transmitted, {received:d} received,".format(
-            sent=self.packets_sent,
-            received=self.packets_received,
-        )
+        part = f"{self.packets_sent:d} packets transmitted, {self.packets_received:d} received,"
 
         if self.packets_duplicated > 0:
-            part += " {dup:d} duplicated,".format(dup=self.packets_duplicated)
+            part += f" {self.packets_duplicated:d} duplicated,"
 
-        part += " {loss:0.1f}% packet loss".format(loss=loss_percent)
+        part += f" {loss_percent:0.1f}% packet loss"
         print(part)
 
         if self.packets_duplicated > 0:
@@ -136,12 +128,7 @@ class XPingProgram(BaseProgram):
         rtt_min, rtt_avg, rtt_max, mdev = self.get_statistics()
         print(
             "rtt min/avg/max/mdev = "
-            "{min:0.3f}/{avg:0.3f}/{max:0.3f}/{mdev:0.3f} ms".format(
-                min=rtt_min * 1000,
-                avg=rtt_avg * 1000,
-                max=rtt_max * 1000,
-                mdev=mdev * 1000
-            ))
+            f"{rtt_min * 1000:0.3f}/{rtt_avg * 1000:0.3f}/{rtt_max * 1000:0.3f}/{mdev * 1000:0.3f} ms")
 
     def update_statics(self, rtt):
         if self.rtt_min is None or self.rtt_min > rtt:
@@ -206,16 +193,10 @@ class XPingProgram(BaseProgram):
             self.sock.close()
 
     def response_received(self, time_spent):
-        print("{ip_addr} port={port} time={time_ms:0.2f} ms".format(
-            ip_addr=self.addr[0],
-            port=self.addr[1],
-            time_ms=time_spent * 1000
-        ))
+        print(f"{self.addr[0]} port={self.addr[1]} time={time_spent * 1000:0.2f} ms")
 
     def duplicate_received(self):
-        print("{ip_addr} port={port} DUPLICATE".format(
-            ip_addr=self.addr[0], port=self.addr[1]
-        ))
+        print(f"{self.addr[0]} port={self.addr[1]} DUPLICATE")
 
     def wait_response(self, timeout):
         time_left = timeout
@@ -240,7 +221,7 @@ class XPingProgram(BaseProgram):
                     end_time = monotonic_time()
                     timeout -= end_time - start_time
                     return False, timeout
-            except socket.error as e:  # use BlockingIOError in python 3
+            except OSError as e:  # use BlockingIOError in python 3
                 if e.errno != errno.EAGAIN:
                     raise
                 # select returned that socket is ready for reading but during
@@ -262,7 +243,7 @@ class XPingProgram(BaseProgram):
             if 0 < port_val <= 65535:
                 return port_val
             else:
-                msg = 'Port should be in range (0, 65535]'
+                msg = "Port should be in range (0, 65535]"
                 raise argparse.ArgumentTypeError(msg)
 
     @classmethod
@@ -275,8 +256,7 @@ class XPingProgram(BaseProgram):
             if interval_val >= cls.minimal_interval:
                 return interval_val
             else:
-                msg = "interval should be more or equal to {0}" \
-                            .format(cls.minimal_interval)
+                msg = f"interval should be more or equal to {cls.minimal_interval}"
                 raise argparse.ArgumentTypeError(msg)
 
     @staticmethod
@@ -295,22 +275,22 @@ class XPingProgram(BaseProgram):
     @classmethod
     def build_parser(cls):
         parser = super(XPingProgram, cls).build_parser()
-        parser.add_argument('-t', '--protocol', dest='ping_proto',
+        parser.add_argument("-t", "--protocol", dest="ping_proto",
                             default=cls.default_ping_protocol,
                             choices=cls.ping_protocols.keys())
-        parser.add_argument('-p', '--port', default=cls.default_port,
+        parser.add_argument("-p", "--port", default=cls.default_port,
                             type=cls.port_validator,
-                            help='udp port where to send packets')
-        interval_help = 'interval in seconds between packets,' \
-                        ' default {:0.1f}'.format(cls.default_interval)
-        parser.add_argument('-i', '--interval', default=cls.default_interval,
+                            help="udp port where to send packets")
+        interval_help = "interval in seconds between packets," \
+                        f" default {cls.default_interval:0.1f}"
+        parser.add_argument("-i", "--interval", default=cls.default_interval,
                             type=cls.interval_validator, help=interval_help)
-        parser.add_argument('-4', action='store_const', const=socket.AF_INET,
+        parser.add_argument("-4", action="store_const", const=socket.AF_INET,
                             dest="proto", default=socket.AF_UNSPEC,
-                            help='Use only IPv4 protocol')
-        parser.add_argument('-6', action='store_const', const=socket.AF_INET6,
-                            dest="proto", help='Use only IPv6 protocol')
-        parser.add_argument('-c', '--count', default=0,
+                            help="Use only IPv4 protocol")
+        parser.add_argument("-6", action="store_const", const=socket.AF_INET6,
+                            dest="proto", help="Use only IPv6 protocol")
+        parser.add_argument("-c", "--count", default=0,
                             type=cls.count_validator)
-        parser.add_argument('server', type=str)
+        parser.add_argument("server", type=str)
         return parser

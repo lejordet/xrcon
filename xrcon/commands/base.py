@@ -1,7 +1,7 @@
 import argparse
 
 
-class BaseProgram(object):
+class BaseProgram:
 
     description = None
 

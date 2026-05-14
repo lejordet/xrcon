@@ -1,16 +1,9 @@
 xrcon
 =====
 
-.. image:: https://travis-ci.org/bacher09/xrcon.svg?branch=master
-    :target: https://travis-ci.org/bacher09/xrcon
+This is a modernized fork of xrcon by lejordet for the https://github.com/lejordet/q3bot project.
 
-.. image:: https://ci.appveyor.com/api/projects/status/d0xmpvmpb8c9skb0?svg=true&branch=master
-    :target: https://ci.appveyor.com/project/bacher09/xrcon
-
-.. image:: https://coveralls.io/repos/bacher09/xrcon/badge.svg?branch=master
-    :target: https://coveralls.io/r/bacher09/xrcon?branch=master 
-
-
+Original description:
 Darkplaces and Quakes rcon [#rcon]_ protocol and client implementation.
 Works with such games like Xonotic_, `Nexuiz`__, Warsow_ and other games with
 Quakes rcon.
@@ -24,13 +17,15 @@ Features
   * Support both IPv4 and IPv6 connections.
   * Bundled console client.
   * Well tested, test coverage near 100%.
-  * Works with python 2.7, 3.3+.
+  * Requires Python 3.12+.
 
 Installation
 ------------
 
+Requires Python 3.12+.
+
   * execute ``pip install xrcon``
-  * or run ``pip install -e git+https://github.com/bacher09/xrcon#egg=xrcon``
+  * or run ``pip install -e git+https://github.com/lejordet/xrcon#egg=xrcon``
     to install development version from github
 
 Usage

@@ -2,8 +2,8 @@ from ..base import mock
 from .base import BaseCommandTest, ExitException
 from xrcon.commands.xrcon import XRcon, XRconProgram, ConfigParser
 from xrcon.utils import parse_server_addr
+import io
 import socket
-import six
 
 
 CONFIG_EXAMPLE = """\
@@ -57,8 +57,23 @@ class XRconCommandTest(BaseCommandTest):
         self.xrcon = XRconProgram.start
 
     def patch_configparser(self):
+        # Store original methods before patching
+        original_read = ConfigParser.read
+        original_read_file = ConfigParser.read_file
+        
         def read_fun(self, names):
-            self.readfp(six.StringIO(CONFIG_EXAMPLE))
+            if isinstance(names, io.StringIO):
+                original_read_file(self, names)
+            elif isinstance(names, list):
+                # When reading from filenames, use CONFIG_EXAMPLE
+                # This simulates reading from the config file
+                for name in names:
+                    if name:  # Skip empty/None filenames
+                        # Create a StringIO with CONFIG_EXAMPLE and read it
+                        original_read_file(self, io.StringIO(CONFIG_EXAMPLE))
+                        break
+            else:
+                original_read(self, names)
 
         read_patcher = mock.patch.object(ConfigParser, 'read', autospec=True,
                                          side_effect=read_fun)
@@ -86,9 +101,10 @@ class XRconCommandTest(BaseCommandTest):
 
     def test_simple(self):
         xrcon_mock = self.xrcon_mock
-        xrcon_mock.return_value.execute.return_value = six.b('Result')
+        xrcon_mock.return_value.execute.return_value = b'Result'
         self.xrcon("-s server -p password -t 2 status".split())
         self.assertTrue(self.read_mock.called)
+        # timeout=1.2 from CONFIG_EXAMPLE DEFAULT section
         xrcon_mock.return_value.execute.assert_called_once_with('status', 1.2)
 
         xrcon_mock.create_by_server_str \
@@ -97,6 +113,7 @@ class XRconCommandTest(BaseCommandTest):
         xrcon_mock.reset_mock()
         xrcon_mock.create_by_server_str.return_value = xrcon_mock.return_value
         self.xrcon("-n minsta status".split())
+        # minsta section has no timeout, falls back to DEFAULT timeout=1.2
         xrcon_mock.return_value.execute.assert_called_once_with('status', 1.2)
         xrcon_mock.create_by_server_str \
             .assert_called_once_with('127.0.0.1:26001', 'secret', 0, 1.2)
@@ -113,10 +130,10 @@ class XRconCommandTest(BaseCommandTest):
 
     @mock.patch('getpass.getpass')
     def test_config(self, getpass_mock):
-        getpass_mock.return_value = six.u('getpass')
-        self.xrcon_mock.return_value.execute.return_value = six.b('Result')
+        getpass_mock.return_value = 'getpass'
+        self.xrcon_mock.return_value.execute.return_value = b'Result'
         self.filetype_mock.return_value.return_value = \
-            six.StringIO(CONFIG_EXAMPLE2)
+            io.StringIO(CONFIG_EXAMPLE2)
         self.xrcon("--config myconfig.ini -s server -t 2 status".split())
 
     def test_invalid(self):
@@ -127,7 +144,7 @@ class XRconCommandTest(BaseCommandTest):
             self.xrcon("-n bad_section status".split())
 
         self.filetype_mock.return_value.return_value = \
-            six.StringIO(INVALID_CONFIG)
+            io.StringIO(INVALID_CONFIG)
 
         with self.assertRaises(ExitException):
             self.xrcon("--config invalid.ini -n corupted status".split())

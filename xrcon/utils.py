@@ -1,26 +1,25 @@
-import time
-import socket
-import struct
-import hashlib
 import hmac
 import re
-import six
+import socket
+import struct
+import time
 
+from Crypto.Hash import MD4 as MD4_hash
 
 MAX_PACKET_SIZE = 1400
-QUAKE_PACKET_HEADER = six.b('\xFF' * 4)
-RCON_RESPONSE_HEADER = QUAKE_PACKET_HEADER + six.b('n')
-CHALLENGE_PACKET = QUAKE_PACKET_HEADER + six.b('getchallenge')
-CHALLENGE_RESPONSE_HEADER = QUAKE_PACKET_HEADER + six.b('challenge ')
-MASTER_RESPONSE_HEADER = QUAKE_PACKET_HEADER + six.b('getserversResponse')
-PING_Q2_PACKET = QUAKE_PACKET_HEADER + six.b('ping')
-PONG_Q2_PACKET = QUAKE_PACKET_HEADER + six.b('ack')
-PING_Q3_PACKET = six.b('ping')
-PONG_Q3_PACKET = QUAKE_PACKET_HEADER + six.b('disconnect')
+QUAKE_PACKET_HEADER = b"\xFF" * 4
+RCON_RESPONSE_HEADER = QUAKE_PACKET_HEADER + b"n"
+CHALLENGE_PACKET = QUAKE_PACKET_HEADER + b"getchallenge"
+CHALLENGE_RESPONSE_HEADER = QUAKE_PACKET_HEADER + b"challenge "
+MASTER_RESPONSE_HEADER = QUAKE_PACKET_HEADER + b"getserversResponse"
+PING_Q2_PACKET = QUAKE_PACKET_HEADER + b"ping"
+PONG_Q2_PACKET = QUAKE_PACKET_HEADER + b"ack"
+PING_Q3_PACKET = b"ping"
+PONG_Q3_PACKET = QUAKE_PACKET_HEADER + b"disconnect"
 PING_QFUSION_PACKET = PING_Q2_PACKET
-PONG_QFUSION_PACKET = QUAKE_PACKET_HEADER + six.b('ack ')
-QUAKE_STATUS_PACKET = QUAKE_PACKET_HEADER + six.b('getstatus')
-STATUS_RESPONSE_HEADER = QUAKE_PACKET_HEADER + six.b('statusResponse\n')
+PONG_QFUSION_PACKET = QUAKE_PACKET_HEADER + b"ack "
+QUAKE_STATUS_PACKET = QUAKE_PACKET_HEADER + b"getstatus"
+STATUS_RESPONSE_HEADER = QUAKE_PACKET_HEADER + b"statusResponse\n"
 ADDR_STR_RE = re.compile(r"""
     ^(?:
         (?P<host>[^:]+)               # ipv4 address or host name
@@ -30,46 +29,70 @@ ADDR_STR_RE = re.compile(r"""
     """, re.VERBOSE)
 
 
-def md4(*args, **kwargs):
-    return hashlib.new('MD4', *args, **kwargs)
+# MD4 hash using pycryptodome
+class _MD4Wrapper:
+    """Wrapper to make pycryptodome MD4 compatible with hashlib interface."""
+    digest_size = 16  # MD4 produces 16-byte (128-bit) digests
+    block_size = 64  # MD4 block size is 64 bytes
+
+    def __init__(self, data=b""):
+        self._hash = MD4_hash.new()
+        if data:
+            self._hash.update(data)
+
+    def update(self, data):
+        self._hash.update(data)
+        return self
+
+    def digest(self):
+        return self._hash.digest()
+
+    def hexdigest(self):
+        return self._hash.hexdigest()
+
+    def copy(self):
+        """Return a copy of the hash object."""
+        return _MD4Wrapper(self._hash.digest())
+
+
+def md4(data=b""):
+    """MD4 hash function using pycryptodome.
+    
+    Returns a hashlib-compatible hash object with digest() and update() methods.
+    """
+    return _MD4Wrapper(data)
 
 
 def rcon_nosecure_packet(password, command):
-    return QUAKE_PACKET_HEADER + six.b(
-        'rcon {password} {command}'.format(password=password, command=command))
+    return QUAKE_PACKET_HEADER + (
+        f"rcon {password} {command}".encode()
+    )
 
 
-if six.PY2:  # pragma: no cover
-    def to_bytes(text):
-        return str(text)
+def to_bytes(text):
+    if not isinstance(text, bytes):
+        text = text.encode("utf-8")
+    return text
 
-    def hmac_md4(key, msg):
-        return hmac.new(key, msg, md4)
-else:  # pragma: no cover
-    def to_bytes(text):
-        if not isinstance(text, bytes):
-            text = six.b(text)
 
-        return text
-
-    def hmac_md4(key, msg):
-        key, msg = to_bytes(key), to_bytes(msg)
-        return hmac.new(key, msg, md4)
+def hmac_md4(key, msg):
+    key, msg = to_bytes(key), to_bytes(msg)
+    return hmac.new(key, msg, md4)
 
 
 def rcon_secure_time_packet(password, command, time_diff=0):
-    if six.PY3 and isinstance(command, six.binary_type):
+    if isinstance(command, bytes):
         command = command.decode("utf8")
 
     cur_time = time.time() + time_diff
-    cmd_and_time = "{time:6f} {cmd}".format(time=cur_time, cmd=command)
+    cmd_and_time = f"{cur_time:6f} {command}"
     key = hmac_md4(password, cmd_and_time).digest()
-    return six.b('').join([
+    return b"".join([
         QUAKE_PACKET_HEADER,
-        six.b('srcon HMAC-MD4 TIME '),
+        b"srcon HMAC-MD4 TIME ",
         key,
-        six.b(' '),
-        six.b(cmd_and_time)
+        b" ",
+        cmd_and_time.encode("utf-8")
     ])
 
 
@@ -82,15 +105,15 @@ def rcon_secure_challenge_packet(password, challenge, command):
     password = to_bytes(password)
     challenge = to_bytes(challenge)
     command = to_bytes(command)
-    hmac_key = six.b(' ').join([challenge, command])
+    hmac_key = b" ".join([challenge, command])
     key = hmac_md4(password, hmac_key).digest()
-    return six.b('').join([
+    return b"".join([
         QUAKE_PACKET_HEADER,
-        six.b('srcon HMAC-MD4 CHALLENGE '),
+        b"srcon HMAC-MD4 CHALLENGE ",
         key,
-        six.b(' '),
+        b" ",
         challenge,
-        six.b(' '),
+        b" ",
         command
     ])
 
@@ -126,10 +149,10 @@ def parse_server_addr(str_addr, default_port=26000):
     """
     m = ADDR_STR_RE.match(str_addr)
     if m is None:
-        raise ValueError('Bad address string "{0}"'.format(str_addr))
+        raise ValueError(f'Bad address string "{str_addr}"')
 
     dct = m.groupdict()
-    port = dct.get('port')
+    port = dct.get("port")
     if port is None:
         port = default_port
     else:
@@ -138,24 +161,24 @@ def parse_server_addr(str_addr, default_port=26000):
     if port == 0:
         raise ValueError("Port can't be zero")
 
-    host = dct['host'] if dct['host'] else dct['host6']
+    host = dct["host"] if dct["host"] else dct["host6"]
     return host, port
 
 
 def parse_server_vars(server_vars):
-    if not server_vars.startswith(six.b('\\')):
-        raise ValueError('Invalid server vars')
+    if not server_vars.startswith(b"\\"):
+        raise ValueError("Invalid server vars")
 
-    values = server_vars.split(six.b('\\'))[1:]
-    return dict(zip(values[::2], values[1::2]))
+    values = server_vars.split(b"\\")[1:]
+    return dict(zip(values[::2], values[1::2], strict=False))
 
 
-class Player(object):
+class Player:
 
     PLAYER_RE = re.compile(
-        six.b(r'^(?P<frags>-?\d+) (?P<ping>-?\d+) "(?P<name>.*?)"$')
+        rb'^(?P<frags>-?\d+) (?P<ping>-?\d+) "(?P<name>.*?)"$'
     )
-    __slots__ = ('frags', 'ping', 'name')
+    __slots__ = ("frags", "ping", "name")
 
     def __init__(self, frags, ping, name):
         self.frags = frags
@@ -163,25 +186,24 @@ class Player(object):
         self.name = name
 
     def __repr__(self):
-        return six.u('<Player({frags}, {ping}, {name})>') \
-            .format(name=repr(self.name), frags=self.frags, ping=self.ping)
+        return f"<Player({self.frags}, {self.ping}, {self.name!r})>"
 
     @classmethod
     def from_dict(cls, dct):
-        return cls(int(dct['frags']), int(dct['ping']), dct['name'])
+        return cls(int(dct["frags"]), int(dct["ping"]), dct["name"])
 
     @classmethod
     def parse_player(cls, player_data):
         m = cls.PLAYER_RE.match(player_data)
         if m is None:
-            raise ValueError('Bad player data')
+            raise ValueError("Bad player data")
 
         return cls.from_dict(m.groupdict())
 
 
 def parse_status_packet(status_packet, player_factory=Player.parse_player):
     data = status_packet[len(STATUS_RESPONSE_HEADER):]
-    parts = data.split(six.b('\n'))[:-1]  # split server vars and player
+    parts = data.split(b"\n")[:-1]  # split server vars and player
     # sections and remove last '\n' symbol
     if len(parts) < 1:
         raise ValueError("Bad packet")
@@ -198,14 +220,14 @@ def iter_blocks(data, count):
 
 def parse_servers_response(servers_packet):
     for server_data in iter_blocks(servers_packet[22:], 7):
-        if server_data == six.b('\\EOT\x00\x00\x00'):
-            raise StopIteration
+        if server_data == b"\\EOT\x00\x00\x00":
+            return
 
-        s, server_ip, server_port = struct.unpack('>c4sH', server_data)
-        if s != six.b('\\'):
-            raise ValueError('Bad packet format')
+        s, server_ip, server_port = struct.unpack(">c4sH", server_data)
+        if s != b"\\":
+            raise ValueError("Bad packet format")
         server_ip = socket.inet_ntoa(server_ip)
 
         yield server_ip, server_port
 
-    raise ValueError('Packet have no EOT signature')
+    raise ValueError("Packet have no EOT signature")

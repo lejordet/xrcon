@@ -1,0 +1,95 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xrcon"
+description = "Quake and DarkPlaces rcon client. Supports games like Xonotic, Nexuiz and others."
+readme = "README.rst"
+requires-python = ">=3.12"
+dependencies = ["pycryptodome==3.23.0"]
+license = {text = "LGPL"}
+authors = [
+    {name = "Slava Bacherikov", email = "slava@bacher09.org"},
+    {name = "lejordet"},
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Internet",
+    "Topic :: Games/Entertainment",
+    "Topic :: Games/Entertainment :: First Person Shooters"
+]
+keywords = ["rcon", "xonotic", "nexuiz", "darkplaces", "quake"]
+version = "0.3dev"
+
+[project.scripts]
+xrcon = "xrcon.commands.xrcon:XRconProgram.start"
+xping = "xrcon.commands.xping:XPingProgram.start"
+
+[project.optional-dependencies]
+dev = [
+    "pytest==8.0.0",
+    "pytest-cov==5.0.0",
+    "ruff==0.4.0",
+    "ty==0.0.12",
+]
+
+[tool.setuptools.packages.find]
+include = ["xrcon*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--cov=xrcon --cov-report=term-missing"
+
+[tool.coverage.run]
+source = ["xrcon"]
+branch = true
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+exclude = ["tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "C", "B", "I", "N", "UP", "S", "BLE", "C4", "ICN", "PIE", "PT", "Q", "RUF", "SIM", "INT", "ARG", "PD", "PGH", "PLE", "PLW", "FLY", "NPY", "AIR", "PERF", "FURB"]
+ignore = [
+    "S101",    # assert used in tests and for validation
+    "S303",    # MD4 is required for DarkPlaces protocol compatibility
+    "T201",    # print is used in CLI tools
+    "B904",    # raise from err - can be added later
+    "N811",    # Constant names - MD4_hash is fine
+    "N818",    # Exception names - can be improved later
+    "UP004",   # Class inherits from object - Python 2 compatibility remnants
+    "UP008",   # super() - can be improved later
+    "UP024",   # OSError alias - can be improved later
+    "UP030",   # f-string format - can be improved later
+    "UP032",   # f-string - can be improved later
+    "RUF012",  # ClassVar - can be added later
+    "C400",   # Generator - can be improved later
+    "W293",   # Blank line with whitespace - can be fixed later
+    "Q000",   # Single quotes - will fix gradually
+    "E501",   # Line too long - will fix gradually
+    "SIM108", # Ternary - can be improved later
+    "F401",   # Unused imports - will clean up
+    "F811",   # Redefined names - will fix
+    "PERF401", # List comprehension performance - readability vs performance
+]
+
+
+
+[tool.uv]
+dev-dependencies = [
+    "pytest==8.0.0",
+    "pytest-cov==5.0.0",
+    "ruff==0.4.0",
+    "ty==0.0.12",
+]
