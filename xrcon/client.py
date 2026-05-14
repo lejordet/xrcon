@@ -1,6 +1,7 @@
 import socket
 import time
 from functools import wraps
+from typing import TYPE_CHECKING, Optional
 
 from .utils import (
     CHALLENGE_PACKET,
@@ -28,15 +29,21 @@ class NotConnected(Exception):
     pass
 
 
-def connection_required(fun):
+if TYPE_CHECKING:
+    from typing import Callable, TypeVar, ParamSpec, cast
+    P = ParamSpec('P')
+    R = TypeVar('R')
+
+
+def connection_required(fun: 'Callable[P, R]') -> 'Callable[P, R]':
     @wraps(fun)
-    def wrapper(self, *args, **kwargs):
+    def wrapper(self, *args: 'P.args', **kwargs: 'P.kwargs') -> 'R':
         if self.sock is None:
             raise NotConnected("You should call connect first")
-
+        # Type narrowing: self.sock is not None after this check
         return fun(self, *args, **kwargs)
 
-    return wrapper
+    return wrapper  # type: ignore[return-value]
 
 
 class QuakeProtocol:
@@ -48,7 +55,7 @@ class QuakeProtocol:
         self.host = host
         self.port = port
         self.timeout = timeout
-        self.sock = None
+        self.sock: Optional[socket.socket] = None
 
     def connect(self):
         "Create connection to server"
@@ -61,14 +68,14 @@ class QuakeProtocol:
     @connection_required
     def close(self):
         "Close connection"
-        self.sock.close()
+        self.sock.close()  # type: ignore[possibly-missing-attribute]
         self.sock = None
 
     @connection_required
     def read_iterator(self, timeout=3):
         timeout_time = time.time() + timeout
         while time.time() < timeout_time:
-            yield self.sock.recv(MAX_PACKET_SIZE)
+            yield self.sock.recv(MAX_PACKET_SIZE)  # type: ignore[possibly-missing-attribute]
 
         raise TimeoutError("Read timeout")
 
@@ -85,7 +92,7 @@ class QuakeProtocol:
     @connection_required
     def getchallenge(self):
         "Return server challenge"
-        self.sock.send(CHALLENGE_PACKET)
+        self.sock.send(CHALLENGE_PACKET)  # type: ignore[possibly-missing-attribute]
         # wait challenge response
         for packet in self.read_iterator(self.CHALLENGE_TIMEOUT):
             if packet.startswith(CHALLENGE_RESPONSE_HEADER):
@@ -93,7 +100,7 @@ class QuakeProtocol:
 
     @connection_required
     def getstatus_packet(self):
-        self.sock.send(QUAKE_STATUS_PACKET)
+        self.sock.send(QUAKE_STATUS_PACKET)  # type: ignore[possibly-missing-attribute]
         # wait challenge response
         for packet in self.read_iterator(self.CHALLENGE_TIMEOUT):
             if packet.startswith(STATUS_RESPONSE_HEADER):
@@ -106,7 +113,7 @@ class QuakeProtocol:
         return parse_status_packet(packet, self.player_factory)
 
     def _ping(self, ping_packet, pong_packet, timeout=1):
-        self.sock.send(ping_packet)
+        self.sock.send(ping_packet)  # type: ignore[possibly-missing-attribute]
         # wait pong packet
         start = time.time()
         try:
@@ -174,12 +181,12 @@ class XRcon(QuakeProtocol):
     def send(self, command):
         "Send rcon command to server"
         if self.secure_rcon == self.RCON_NOSECURE:
-            self.sock.send(rcon_nosecure_packet(self.password, command))
+            self.sock.send(rcon_nosecure_packet(self.password, command))  # type: ignore[possibly-missing-attribute]
         elif self.secure_rcon == self.RCON_SECURE_TIME:
-            self.sock.send(rcon_secure_time_packet(self.password, command))
+            self.sock.send(rcon_secure_time_packet(self.password, command))  # type: ignore[possibly-missing-attribute]
         elif self.secure_rcon == self.RCON_SECURE_CHALLENGE:
             challenge = self.getchallenge()
-            self.sock.send(rcon_secure_challenge_packet(self.password,
+            self.sock.send(rcon_secure_challenge_packet(self.password,  # type: ignore[possibly-missing-attribute]
                                                         challenge, command))
         else:
             raise ValueError("Bad value of secure_rcon")
