@@ -29,7 +29,7 @@ classifiers = [
     "Topic :: Games/Entertainment :: First Person Shooters"
 ]
 keywords = ["rcon", "xonotic", "nexuiz", "darkplaces", "quake"]
-version = "0.3dev"
+version = "0.4dev"
 
 [project.scripts]
 xrcon = "xrcon.commands.xrcon:XRconProgram.start"
