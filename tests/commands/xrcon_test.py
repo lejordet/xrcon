@@ -75,17 +75,17 @@ class XRconCommandTest(BaseCommandTest):
             else:
                 original_read(self, names)
 
-        read_patcher = mock.patch.object(ConfigParser, 'read', autospec=True,
+        self.read_patcher = mock.patch.object(ConfigParser, 'read', autospec=True,
                                          side_effect=read_fun)
-        self.read_mock = read_patcher.start()
-        self.addCleanup(read_patcher.stop)
+        self.read_mock = self.read_patcher.start()
+        self.addCleanup(self.read_patcher.stop)
 
     def patch_xrcon(self):
-        xrcon_patcher = mock.patch('xrcon.commands.xrcon.XRcon', autospec=True,
+        self.xrcon_patcher = mock.patch('xrcon.commands.xrcon.XRcon', autospec=True,
                                    RCON_TYPES=XRcon.RCON_TYPES)
 
-        self.xrcon_mock = xrcon_patcher.start()
-        self.addCleanup(xrcon_patcher.stop)
+        self.xrcon_mock = self.xrcon_patcher.start()
+        self.addCleanup(self.xrcon_patcher.stop)
 
         def create_by_server_str(server_addr, *args, **kwargs):
             host, port = parse_server_addr(server_addr)
