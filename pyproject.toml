@@ -39,8 +39,8 @@ xping = "xrcon.commands.xping:XPingProgram.start"
 dev = [
     "pytest==8.0.0",
     "pytest-cov==5.0.0",
-    "ruff==0.4.0",
-    "ty==0.0.12",
+    "ruff==0.15.13",
+    "ty==0.0.35",
 ]
 
 [tool.setuptools.packages.find]
@@ -53,6 +53,11 @@ addopts = "--cov=xrcon --cov-report=term-missing"
 [tool.coverage.run]
 source = ["xrcon"]
 branch = true
+
+# UV Configuration
+# Dependencies are explicitly pinned to specific versions.
+# Renovate is configured to only update dependencies after 7 days (minimumReleaseAge).
+# Run `uv lock` after updating versions in this file.
 
 [tool.ruff]
 line-length = 88

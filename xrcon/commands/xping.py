@@ -96,7 +96,7 @@ class XPingProgram(BaseProgram):
         self.sock.setblocking(False)
 
     def print_header(self, namespace):
-        print(f"XPING {namespace.server} ({self.addr[0]}) port: {namespace.port}")  # type: ignore[union-attr]
+        print(f"XPING {namespace.server} ({self.addr[0]}) port: {namespace.port}")  # ty: ignore[not-subscriptable]
 
     def print_footer(self):
         if self.packets_sent <= 0:
@@ -160,7 +160,7 @@ class XPingProgram(BaseProgram):
     def do_ping(self, count=0, interval=1.0):
         self.ping_start = monotonic_time()
         while True:
-            self.sock.sendto(self.ping_proto.ping, self.addr)  # type: ignore[union-attr,arg-type]
+            self.sock.sendto(self.ping_proto.ping, self.addr)  # ty: ignore[unresolved-attribute,invalid-argument-type]
             received, time_left = self.wait_response(interval)
             self.packets_sent += 1
             if received:
@@ -192,13 +192,13 @@ class XPingProgram(BaseProgram):
         else:
             self.print_footer()
         finally:
-            self.sock.close()  # type: ignore[union-attr]
+            self.sock.close()  # ty: ignore[unresolved-attribute]
 
     def response_received(self, time_spent):
-        print(f"{self.addr[0]} port={self.addr[1]} time={time_spent * 1000:0.2f} ms")  # type: ignore[union-attr]
+        print(f"{self.addr[0]} port={self.addr[1]} time={time_spent * 1000:0.2f} ms")  # ty: ignore[not-subscriptable]
 
     def duplicate_received(self):
-        print(f"{self.addr[0]} port={self.addr[1]} DUPLICATE")  # type: ignore[union-attr]
+        print(f"{self.addr[0]} port={self.addr[1]} DUPLICATE")  # ty: ignore[not-subscriptable]
 
     def wait_response(self, timeout):
         time_left = timeout
@@ -211,11 +211,11 @@ class XPingProgram(BaseProgram):
 
     def check_response(self, timeout):
         start_time = monotonic_time()
-        rlst, _, _ = select.select([self.sock.fileno()], [], [], timeout)  # type: ignore[union-attr]
+        rlst, _, _ = select.select([self.sock.fileno()], [], [], timeout)  # ty: ignore[unresolved-attribute]
         if rlst:
             try:
-                data, addr = self.sock.recvfrom(MAX_PACKET_SIZE)  # type: ignore[union-attr]
-                if data == self.ping_proto.pong and addr == self.addr:  # type: ignore[union-attr]
+                data, addr = self.sock.recvfrom(MAX_PACKET_SIZE)  # ty: ignore[unresolved-attribute]
+                if data == self.ping_proto.pong and addr == self.addr:  # ty: ignore[unresolved-attribute]
                     end_time = monotonic_time()
                     timeout -= end_time - start_time
                     return True, timeout

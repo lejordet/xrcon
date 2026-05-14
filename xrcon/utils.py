@@ -178,7 +178,7 @@ class Player:
     PLAYER_RE = re.compile(
         rb'^(?P<frags>-?\d+) (?P<ping>-?\d+) "(?P<name>.*?)"$'
     )
-    __slots__ = ("frags", "ping", "name")
+    __slots__ = ("frags", "name", "ping")
 
     def __init__(self, frags, ping, name):
         self.frags = frags
