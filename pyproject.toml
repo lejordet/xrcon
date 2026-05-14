@@ -11,7 +11,7 @@ dependencies = ["pycryptodome==3.23.0"]
 license = {text = "LGPL"}
 authors = [
     {name = "Slava Bacherikov", email = "slava@bacher09.org"},
-    {name = "lejordet"},
+    {name = "Lars Erik Jordet, email = "lejordet@gmail.com"},
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -60,7 +60,7 @@ target-version = "py312"
 exclude = ["tests"]
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "C", "B", "I", "N", "UP", "S", "BLE", "C4", "ICN", "PIE", "PT", "Q", "RUF", "SIM", "INT", "ARG", "PD", "PGH", "PLE", "PLW", "FLY", "NPY", "AIR", "PERF", "FURB"]
+select = ["E", "F", "W", "C", "B", "I", "N", "UP", "S", "BLE", "C4", "ICN", "PIE", "PT", "Q", "RUF", "SIM", "INT", "ARG", "PD", "PGH", "PLE", "PLW", "FLY", "NPY", "AIR", "PERF"]
 ignore = [
     "S101",    # assert used in tests and for validation
     "S303",    # MD4 is required for DarkPlaces protocol compatibility
@@ -82,14 +82,4 @@ ignore = [
     "F401",   # Unused imports - will clean up
     "F811",   # Redefined names - will fix
     "PERF401", # List comprehension performance - readability vs performance
-]
-
-
-
-[tool.uv]
-dev-dependencies = [
-    "pytest==8.0.0",
-    "pytest-cov==5.0.0",
-    "ruff==0.4.0",
-    "ty==0.0.12",
 ]
