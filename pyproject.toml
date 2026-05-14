@@ -11,7 +11,7 @@ dependencies = ["pycryptodome==3.23.0"]
 license = {text = "LGPL"}
 authors = [
     {name = "Slava Bacherikov", email = "slava@bacher09.org"},
-    {name = "Lars Erik Jordet, email = "lejordet@gmail.com"},
+    {name = "Lars Erik Jordet", email = "lejordet@gmail.com"},
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
