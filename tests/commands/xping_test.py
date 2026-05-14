@@ -7,17 +7,13 @@ import argparse
 import socket
 import errno
 import math
-import six
 from xrcon.utils import (
     PONG_Q2_PACKET, PING_Q2_PACKET, PING_Q3_PACKET, PONG_Q3_PACKET
 )
 
 
 def make_blocking_error():
-    if six.PY3:
-        raise BlockingIOError(errno.EAGAIN, "Blocking error")
-    else:
-        raise socket.error(errno.EAGAIN, "Blocking error")
+    raise BlockingIOError(errno.EAGAIN, "Blocking error")
 
 
 class XPingCommandTest(BaseCommandTest):
@@ -533,9 +529,9 @@ class XPingCommandTest(BaseCommandTest):
 
         def sendto_mock(data, addr):
             if data == PING_Q2_PACKET:
-                packets_queue.append((six.b('packet with bad data 1'), addr))
+                packets_queue.append((b'packet with bad data 1', addr))
                 packets_queue.append((PONG_Q2_PACKET, addr))
-                packets_queue.append((six.b('packet with bad data 2'), addr))
+                packets_queue.append((b'packet with bad data 2', addr))
                 # update time
                 self.monotonic_time_mock.return_value += 0.2
 
