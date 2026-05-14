@@ -315,7 +315,7 @@ class ClientTest(TestCase):
 
         rcon = client.XRcon('127.0.0.1', 26000, 'passw', 0)
         challenge = b'11111111111'
-        rcon.getchallenge = lambda: challenge  # type: ignore[assignment]
+        rcon.getchallenge = lambda self: challenge  # type: ignore[assignment]
         rcon.connect()
         rcon.send('status')
         self.assertEqual(
