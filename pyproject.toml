@@ -39,7 +39,7 @@ xping = "xrcon.commands.xping:XPingProgram.start"
 dev = [
     "pytest==8.0.0",
     "pytest-cov==5.0.0",
-    "ruff==0.4.0",
+    "ruff==0.15.13",
     "ty==0.0.12",
 ]
 
