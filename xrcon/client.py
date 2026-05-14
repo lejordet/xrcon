@@ -30,7 +30,8 @@ class NotConnected(Exception):
 
 
 if TYPE_CHECKING:
-    from typing import Callable, TypeVar, ParamSpec, cast
+    from collections.abc import Callable
+    from typing import ParamSpec, TypeVar, cast
     P = ParamSpec('P')
     R = TypeVar('R')
 
@@ -55,7 +56,7 @@ class QuakeProtocol:
         self.host = host
         self.port = port
         self.timeout = timeout
-        self.sock: Optional[socket.socket] = None
+        self.sock: socket.socket | None = None
 
     def connect(self):
         "Create connection to server"
