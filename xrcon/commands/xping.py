@@ -45,10 +45,10 @@ class XPingProgram(BaseProgram):
     def __init__(self):
         super(XPingProgram, self).__init__()
         self.server = None
-        self.sock: Optional[socket.socket] = None
-        self.ping_proto: Optional[PingProtocol] = None
+        self.sock: socket.socket | None = None
+        self.ping_proto: PingProtocol | None = None
         self.server_name = None
-        self.addr: Optional[tuple] = None
+        self.addr: tuple | None = None
         self.packets_sent = 0
         self.packets_received = 0
         self.packets_duplicated = 0
