@@ -2,6 +2,7 @@ from .base import TestCase, mock, unittest
 from xrcon import utils
 from xrcon import client
 import socket
+import types
 
 
 STATUS_PACKET = (
@@ -315,7 +316,7 @@ class ClientTest(TestCase):
 
         rcon = client.XRcon('127.0.0.1', 26000, 'passw', 0)
         challenge = b'11111111111'
-        rcon.getchallenge = lambda self: challenge  # type: ignore[assignment]
+        rcon.getchallenge = types.MethodType(lambda self: challenge, rcon)  # type: ignore[method-assign]
         rcon.connect()
         rcon.send('status')
         self.assertEqual(
