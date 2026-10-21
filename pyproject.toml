@@ -7,7 +7,7 @@ name = "xrcon"
 description = "Quake and DarkPlaces rcon client. Supports games like Xonotic, Nexuiz and others."
 readme = "README.rst"
 requires-python = ">=3.12"
-dependencies = ["pycryptodome==3.23.0"]
+dependencies = ["pycryptodome==4.0.0"]
 license = {text = "LGPL"}
 authors = [
     {name = "Slava Bacherikov", email = "slava@bacher09.org"},
